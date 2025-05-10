@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Trading Kaya Treasury</title>
+<style>
+  /* Reset and base */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #0f2027;  /* dark blue gradient background */
+    background: linear-gradient(135deg, #2c5364, #203a43, #0f2027);
+    color: #f0f3f4;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 20px;
+    max-width: 350px;
+  }
+  header h1 {
+    font-size: 2rem;
+    letter-spacing: 2px;
+    color: #23d997;
+    margin-bottom: 8px;
+  }
+  header p {
+    font-size: 1rem;
+    color: #c9d1d3;
+  }
+  main {
+    background: rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 20px;
+    width: 100%;
+    max-width: 350px;
+    box-shadow: 0 12px 20px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+  }
+  .balance-section {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: #23d997;
+  }
+  .balance-section div {
+    flex: 1;
+    text-align: center;
+  }
+  .balance-section div span {
+    display: block;
+    font-weight: 400;
+    font-size: 0.9rem;
+    color: #ace7cf;
+    margin-top: 4px;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+  label {
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #aad8c7;
+  }
+  input[type="number"], select {
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    background: #1f2933;
+    color: #e0f2f1;
+    font-size: 1rem;
+    margin-bottom: 15px;
+    transition: background 0.3s ease;
+  }
+  input[type="number"]:focus, select:focus {
+    background: #23d997;
+    color: #0f2027;
+    outline: none;
+  }
+  button {
+    background: #23d997;
+    border: none;
+    padding: 12px;
+    color: #0f2027;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 10px;
+  }
+  button:hover {
+    background: #1fa57d;
+  }
+  .history {
+    margin-top: 20px;
+    background: #1f2933;
+    border-radius: 12px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 12px;
+    color: #d4dcdc;
+    font-size: 0.9rem;
+  }
+  .history h2 {
+    margin-bottom: 10px;
+    font-weight: 700;
+    font-size: 1.2rem;
+    color: #23d997;
+  }
+  .history ul {
+    list-style-type: none;
+  }
+  .history ul li {
+    border-bottom: 1px solid #305151;
+    padding: 6px 4px;
+  }
+  .history ul li:last-child {
+    border-bottom: none;
+  }
+  footer {
+    margin-top: auto;
+    font-size: 0.8rem;
+    color: #536871;
+  }
+
+  /* Responsive for small mobile devices */
+  @media (max-width: 350px), (max-height: 600px){
+    body {
+      padding: 10px 8px;
+      font-size: 14px;
+    }
+    main {
+      max-width: 320px;
+      padding: 15px;
+    }
+    header h1 {
+      font-size: 1.7rem;
+    }
+    input[type="number"], select, button {
+      font-size: 0.9rem;
+      padding: 8px;
+    }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>Trading Kaya Treasury</h1>
+  <p>Kelola aset trading Anda dengan cerdas dan aman.</p>
+</header>
+<main>
+  <section class="balance-section">
+    <div>
+      Treasury Balance
+      <span id="balance">0.000</span>
+    </div>
+    <div>
+      Total Deposits
+      <span id="totalDeposits">0.000</span>
+    </div>
+    <div>
+      Total Withdrawals
+      <span id="totalWithdrawals">0.000</span>
+    </div>
+  </section>
+
+  <form id="treasuryForm" autocomplete="off" aria-label="Trading Kaya Treasury deposit and withdrawal form">
+    <label for="amountInput">Amount (USD):</label>
+    <input type="number" id="amountInput" name="amount" placeholder="Enter an amount" min="0.01" step="0.01" required aria-required="true" />
+
+    <label for="actionSelect">Action:</label>
+    <select id="actionSelect" name="action" required aria-required="true">
+      <option value="" disabled selected>Select an action</option>
+      <option value="deposit">Deposit</option>
+      <option value="withdraw">Withdraw</option>
+    </select>
+
+    <button type="submit">Submit</button>
+  </form>
+
+  <section class="history" aria-live="polite" aria-label="Transaction history">
+    <h2>History</h2>
+    <ul id="historyList" role="list">
+      <!-- Transaction records show here -->
+    </ul>
+  </section>
+</main>
+<footer>
+  &copy; 2024 Trading Kaya Treasury. All rights reserved.
+</footer>
+
+<script>
+  // Elements
+  const balanceElem = document.getElementById('balance');
+  const totalDepositsElem = document.getElementById('totalDeposits');
+  const totalWithdrawalsElem = document.getElementById('totalWithdrawals');
+  const form = document.getElementById('treasuryForm');
+  const amountInput = document.getElementById('amountInput');
+  const actionSelect = document.getElementById('actionSelect');
+  const historyList = document.getElementById('historyList');
+
+  // State
+  let balance = 0;
+  let totalDeposits = 0;
+  let totalWithdrawals = 0;
+  let history = [];
+
+  // Save/load in localStorage for persistence
+  function saveState(){
+    localStorage.setItem('tradingKayaTreasuryState', JSON.stringify({
+      balance,
+      totalDeposits,
+      totalWithdrawals,
+      history
+    }));
+  }
+  function loadState(){
+    const saved = localStorage.getItem('tradingKayaTreasuryState');
+    if(saved){
+      const data = JSON.parse(saved);
+      balance = data.balance || 0;
+      totalDeposits = data.totalDeposits || 0;
+      totalWithdrawals = data.totalWithdrawals || 0;
+      history = data.history || [];
+    }
+  }
+
+  // Update display function
+  function updateDisplay(){
+    balanceElem.textContent = balance.toFixed(3);
+    totalDepositsElem.textContent = totalDeposits.toFixed(3);
+    totalWithdrawalsElem.textContent = totalWithdrawals.toFixed(3);
+    updateHistoryList();
+  }
+
+  function updateHistoryList(){
+    historyList.innerHTML = '';
+    if(history.length === 0){
+      historyList.innerHTML = '<li>No transactions yet</li>';
+      return;
+    }
+    // Show newest first
+    for(let i = history.length -1; i >= 0; i--){
+      const item = history[i];
+      const li = document.createElement('li');
+      li.textContent = `${item.datetime} - ${item.action.toUpperCase()}: $${item.amount.toFixed(3)}`;
+      li.style.color = item.action === 'deposit' ? '#23d997' : '#f25c54';
+      historyList.appendChild(li);
+    }
+  }
+
+  // Format datetime as readable string
+  function formatDateTime(date){
+    return date.toISOString().slice(0,19).replace('T', ' ');
+  }
+
+  // Form submit handler
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const amount = parseFloat(amountInput.value);
+    const action = actionSelect.value;
+
+    if(isNaN(amount) || amount <= 0){
+      alert("Please enter a valid positive amount.");
+      return;
+    }
+    if(action !== "deposit" && action !== "withdraw"){
+      alert("Please select a valid action.");
+      return;
+    }
+
+    // Check withdrawal limits
+    if(action === 'withdraw' && amount > balance){
+      alert("Withdrawal amount exceeds current balance.");
+      return;
+    }
+
+    if(action === 'deposit'){
+      balance += amount;
+      totalDeposits += amount;
+    } else {
+      balance -= amount;
+      totalWithdrawals += amount;
+    }
+
+    const now = new Date();
+    history.push({
+      amount,
+      action,
+      datetime: formatDateTime(now)
+    });
+
+    saveState();
+    updateDisplay();
+
+    // Reset form
+    amountInput.value = '';
+    actionSelect.value = '';
+  });
+
+  // Initialize on page load
+  function init(){
+    loadState();
+    updateDisplay();
+  }
+  init();
+</script>
+</body>
+</html>
+
+```
